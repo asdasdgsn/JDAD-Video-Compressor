@@ -108,3 +108,40 @@ final class ProcessTests: XCTestCase {
         XCTAssertEqual(String(decoding:data,as:UTF8.self),"ok")
     }
 }
+final class ReviewRegressionTests: XCTestCase {
+    func testAnamorphicDisplayDimensions() throws {
+        let data=Data(#"{"streams":[{"codec_type":"video","codec_name":"h264","width":720,"height":576,"sample_aspect_ratio":"16:15"}],"format":{"duration":"2"}}"#.utf8)
+        let m=try MediaProbe.decode(data,url:URL(fileURLWithPath:"/tmp/a.mp4"))
+        XCTAssertEqual(m.displayWidth,768);XCTAssertEqual(m.displayHeight,576)
+        let p=try CommandBuilder.build(inputs:[m],settings:.init(),output:URL(fileURLWithPath:"/tmp/b.mp4"))
+        XCTAssertTrue(p.arguments.joined(separator:" ").contains("iw*sar"))
+    }
+    @MainActor func testRetriesReserveDistinctQueuedOutputs() throws {
+        let dir=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at:dir,withIntermediateDirectories:true)
+        defer {try? FileManager.default.removeItem(at:dir)}
+        let queue=QueueStore(directory:dir)
+        let m=MediaInfo(url:dir.appendingPathComponent("missing.mp4"),duration:5,width:320,height:240,videoCodec:"h264")
+        var failed=QueueItem(inputs:[m],settings:.init(),output:dir.appendingPathComponent("out.mp4"));failed.status = .failed
+        queue.items=[failed];queue.retry(id:failed.id);queue.retry(id:failed.id)
+        let reserved=queue.items.filter{$0.status == .waiting || $0.status == .running}.map(\.output.path)
+        XCTAssertEqual(Set(reserved).count,reserved.count)
+        queue.shutdown()
+    }
+    func testCaptureCancellationStopsWaitingForProcess() async throws {
+        let start=Date()
+        let task=Task {try await ProcessCapture.run(executable:URL(fileURLWithPath:"/bin/sleep"),arguments:["3"])}
+        try await Task.sleep(nanoseconds:50_000_000);task.cancel()
+        do {_ = try await task.value;XCTFail("Cancellation must throw")} catch is CancellationError {} catch {XCTFail("Unexpected \(error)")}
+        XCTAssertLessThan(Date().timeIntervalSince(start),1.5)
+    }
+}
+final class StreamSelectionTests: XCTestCase {
+    func testAttachedCoverIsExcludedFromConversion() throws {
+        let data=Data(#"{"streams":[{"index":0,"codec_type":"video","codec_name":"mjpeg","width":600,"height":600,"disposition":{"attached_pic":1}},{"index":1,"codec_type":"video","codec_name":"h264","width":640,"height":360}],"format":{"duration":"2"}}"#.utf8)
+        let m=try MediaProbe.decode(data,url:URL(fileURLWithPath:"/tmp/cover.mp4"))
+        XCTAssertEqual(m.width,640)
+        let p=try CommandBuilder.build(inputs:[m],settings:.init(),output:URL(fileURLWithPath:"/tmp/b.mp4"))
+        XCTAssertTrue(p.arguments.contains("0:V:0"))
+    }
+}

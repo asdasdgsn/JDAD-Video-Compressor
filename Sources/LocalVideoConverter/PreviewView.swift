@@ -43,7 +43,7 @@ struct PreviewView: View {
                 if media.hasVideo {
                     let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString+".png")
                     defer { try? FileManager.default.removeItem(at:temp) }
-                    _ = try? await ProcessCapture.run(executable:EnginePaths.tool("ffmpeg"),arguments:["-v","error","-nostdin","-i",media.url.path,"-vf","scale=800:-2","-frames:v","1",temp.path])
+                    _ = try? await ProcessCapture.run(executable:EnginePaths.tool("ffmpeg"),arguments:["-v","error","-nostdin","-i",media.url.path,"-map","0:V:0","-vf","scale=800:-2","-frames:v","1",temp.path])
                     if !Task.isCancelled { thumbnail=NSImage(contentsOf:temp) }
                 }
             }

@@ -1,0 +1,8 @@
+Corresponding media engine source is supplied in MediaEngine-Sources.tar.gz at the root of the FrameShift installation DMG and alongside the downloadable installer. Keep this archive available with any redistributed copy of the installer.
+
+Official source locations used:
+https://ffmpeg.org/releases/ffmpeg-8.0.3.tar.xz
+https://github.com/webmproject/libvpx/archive/refs/tags/v1.15.2.tar.gz
+https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
+
+See the source archive for exact source tarballs, recorded SHA-256 checksums, configuration and rebuild instructions. The Swift application's own source is supplied separately in FrameShift-Source.zip under the MIT license.

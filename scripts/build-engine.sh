@@ -34,7 +34,7 @@ esac
 WRAPPER
 chmod +x "$ROOT/vpx-pkg-config"
 cd "$ROOT/sources/ffmpeg-8.0.3"
-./configure --prefix="$ROOT/install" --arch=arm64 --target-os=darwin --cc=clang --disable-autodetect --disable-gpl --disable-nonfree --disable-shared --enable-static --disable-doc --disable-debug --disable-ffplay --disable-network --enable-videotoolbox --enable-audiotoolbox --enable-libvpx --enable-libmp3lame --pkg-config="$ROOT/vpx-pkg-config" --extra-cflags="-mmacosx-version-min=14.0 -I$ROOT/install/include" --extra-ldflags="-mmacosx-version-min=14.0 -L$ROOT/install/lib"
+./configure --prefix="$ROOT/install" --arch=arm64 --target-os=darwin --cc=clang --disable-autodetect --disable-gpl --disable-nonfree --disable-shared --enable-static --disable-doc --disable-debug --disable-ffplay --disable-network --enable-videotoolbox --enable-audiotoolbox --enable-zlib --enable-libvpx --enable-libmp3lame --pkg-config="$ROOT/vpx-pkg-config" --extra-cflags="-mmacosx-version-min=14.0 -I$ROOT/install/include" --extra-ldflags="-mmacosx-version-min=14.0 -L$ROOT/install/lib"
 make -j6
 make install
 cp COPYING.LGPLv2.1 "$ROOT/install/FFmpeg-LICENSE.txt"

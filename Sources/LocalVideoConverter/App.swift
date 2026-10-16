@@ -27,7 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if alert.runModal() != .alertFirstButtonReturn { return .terminateCancel }
         }
         if let model {
-            Task { @MainActor in await model.queue.stopAndWait(); sender.reply(toApplicationShouldTerminate: true) }
+            Task { @MainActor in await model.queue.stopAndWait(); await ProcessCapture.shutdown(); sender.reply(toApplicationShouldTerminate: true) }
             return .terminateLater
         }
         return .terminateNow
@@ -102,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let temp = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString+".png")
             defer { try? FileManager.default.removeItem(at: temp) }
             do {
-                _ = try await ProcessCapture.run(executable: EnginePaths.tool("ffmpeg"), arguments: ["-hide_banner","-v","error","-nostdin","-ss",String(settings.start),"-i",media.url.path,"-frames:v","1",temp.path])
+                _ = try await ProcessCapture.run(executable: EnginePaths.tool("ffmpeg"), arguments: ["-hide_banner","-v","error","-nostdin","-ss",String(settings.start),"-i",media.url.path,"-map","0:V:0","-frames:v","1",temp.path])
                 let data = try Data(contentsOf: temp); try data.write(to: url, options: .atomic)
                 NSWorkspace.shared.activateFileViewerSelecting([url])
             } catch { self.error = error.localizedDescription }

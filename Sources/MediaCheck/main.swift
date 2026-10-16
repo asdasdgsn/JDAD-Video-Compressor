@@ -23,7 +23,7 @@ import ConverterCore
         let diff = try await MediaProbe.inspect(url:different)
         try check(media.hasAudio && media.width == 320 && abs(media.duration-3)<0.2,"probe Unicode and quoted path")
         let caps = try await EngineCapabilities.load()
-        try check(["h264_videotoolbox","hevc_videotoolbox","libvpx-vp9","libmp3lame"].allSatisfy{caps.supports($0)},"bundled encoders")
+        try check(["h264_videotoolbox","hevc_videotoolbox","libvpx-vp9","libmp3lame","png"].allSatisfy{caps.supports($0)},"bundled encoders")
         func convert(_ name:String,_ settings:ConversionSettings,_ inputs:[MediaInfo]) async throws -> MediaInfo {
             let out = root.appendingPathComponent(name+"."+settings.format.rawValue)
             let plan = try CommandBuilder.build(inputs:inputs,settings:settings,output:out)
@@ -75,6 +75,49 @@ import ConverterCore
         do { try queue.enqueue(inputs:[noAudio],settings:invalid,directory:root);throw MediaError.message("Expected no-audio rejection") } catch { try check(!error.localizedDescription.contains("Expected"),"no-audio extraction rejection") }
         let before = try Data(contentsOf:input)
         do { let p=try CommandBuilder.build(inputs:[media],settings:.init(),output:input);try await EngineRunner().run(plan:p,progress:{_ in});throw MediaError.message("Input overwrite allowed") } catch { try check(before == Data(contentsOf:input),"original input protected") }
+        let anamorphicURL = root.appendingPathComponent("anamorphic.mp4")
+        _ = try await ProcessCapture.run(executable:ffmpeg,arguments:["-v","error","-n","-f","lavfi","-i","testsrc2=size=720x576:rate=24:duration=1","-vf","setsar=16/15","-c:v","h264_videotoolbox",anamorphicURL.path])
+        let anamorphic = try await MediaProbe.inspect(url:anamorphicURL)
+        let corrected = try await convert("square-pixels",.init(),[anamorphic])
+        try check(corrected.width == 768 && corrected.height == 576,"anamorphic display aspect preserved")
+        let cover = root.appendingPathComponent("cover.jpg")
+        _ = try await ProcessCapture.run(executable:ffmpeg,arguments:["-v","error","-n","-f","lavfi","-i","color=c=blue:size=100x100","-frames:v","1",cover.path])
+        let covered = root.appendingPathComponent("covered.mp4")
+        _ = try await ProcessCapture.run(executable:ffmpeg,arguments:["-v","error","-n","-i",input.path,"-i",cover.path,"-map","1:v","-map","0:v","-map","0:a","-c","copy","-disposition:v:0","attached_pic",covered.path])
+        let withCover = try await MediaProbe.inspect(url:covered)
+        let selectedVideo = try await convert("exclude-cover",.init(),[withCover])
+        try check(selectedVideo.width == 320 && selectedVideo.height == 240 && selectedVideo.duration > 2.5,"attached cover excluded from video selection")
+        let cancelQueue = QueueStore(directory:root.appendingPathComponent("cancel-history"))
+        var slowSettings=ConversionSettings();slowSettings.format = .webm
+        try cancelQueue.enqueue(inputs:[media],settings:slowSettings,directory:root)
+        cancelQueue.start()
+        try await Task.sleep(nanoseconds:10_000_000)
+        await cancelQueue.stopAndWait()
+        try check(cancelQueue.items.first?.status == .cancelled,"queue shutdown cancellation")
+        let leftovers=try FileManager.default.contentsOfDirectory(atPath:root.path).filter{$0.hasPrefix(".FrameShift-")}
+        try check(leftovers.isEmpty,"queue partial directory cleanup")
+        for format in [OutputFormat.mov,.mkv] {
+            var containerSettings=ConversionSettings();containerSettings.format=format
+            let output=try await convert("container-"+format.rawValue,containerSettings,[media])
+            try check(output.hasVideo && output.hasAudio,"container "+format.rawValue)
+        }
+        var cpu=ConversionSettings();cpu.codec = .mpeg4;cpu.flipH=true;cpu.flipV=true;cpu.frameRate=25
+        let cpuOutput=try await convert("cpu-flips-fps",cpu,[media])
+        try check(cpuOutput.videoCodec == "mpeg4" && abs(cpuOutput.fps-25)<0.1,"CPU encoder, flips and frame rate")
+        let png=root.appendingPathComponent("screenshot.png")
+        _ = try await ProcessCapture.run(executable:ffmpeg,arguments:["-v","error","-n","-i",covered.path,"-map","0:V:0","-frames:v","1",png.path])
+        try check((try Data(contentsOf:png)).count>100,"PNG snapshot")
+        let failureQueue=QueueStore(directory:root.appendingPathComponent("failure-history"))
+        var missing=media;missing.url=root.appendingPathComponent("does-not-exist.mp4")
+        try failureQueue.enqueue(inputs:[missing,media],settings:.init(),directory:root)
+        failureQueue.start()
+        while failureQueue.running {try await Task.sleep(nanoseconds:20_000_000)}
+        try check(failureQueue.items.map(\.status) == [.failed,.completed],"failed task does not block next task")
+        try check(!failureQueue.items[0].error.isEmpty,"failed task keeps diagnostic")
+        let auxiliary=Task { try await ProcessCapture.run(executable:URL(fileURLWithPath:"/bin/sleep"),arguments:["5"]) }
+        try await Task.sleep(nanoseconds:50_000_000)
+        let shutdownStart=Date(); await ProcessCapture.shutdown()
+        do {_ = try await auxiliary.value;throw MediaError.message("Auxiliary process survived shutdown")} catch is CancellationError { try check(Date().timeIntervalSince(shutdownStart)<2,"auxiliary shutdown cleanup") }
         try results.joined(separator:"\n").write(to:root.appendingPathComponent("RESULTS.txt"),atomically:true,encoding:.utf8)
         print("VERIFIED \(results.count) checks at \(root.path)")
     }

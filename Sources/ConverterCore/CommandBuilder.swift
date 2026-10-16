@@ -42,7 +42,7 @@ public enum CommandBuilder {
             var filters: [String] = []; var pins = ""
             for (i,m) in inputs.enumerated() {
                 if !s.format.audioOnly {
-                    filters.append("[\(i):v:0]scale=\(w):\(h):force_original_aspect_ratio=decrease,pad=\(w):\(h):(ow-iw)/2:(oh-ih)/2,setsar=1,fps=\(s.frameRate > 0 ? s.frameRate : 30),setpts=PTS-STARTPTS[v\(i)]")
+                    filters.append("[\(i):V:0]scale=w='max(2,trunc(iw*sar/2)*2)':h=ih,setsar=1,scale=\(w):\(h):force_original_aspect_ratio=decrease,pad=\(w):\(h):(ow-iw)/2:(oh-ih)/2,setsar=1,fps=\(s.frameRate > 0 ? s.frameRate : 30),setpts=PTS-STARTPTS[v\(i)]")
                     pins += "[v\(i)]"
                 }
                 if !s.mute {
@@ -58,7 +58,7 @@ public enum CommandBuilder {
             args += ["-filter_complex",filters.joined(separator: ";")]
             if videoOut { args += ["-map","[vout]"] }; if audioOut { args += ["-map","[aout]"] }
         } else {
-            if !s.format.audioOnly { args += ["-map","0:v:0"] }
+            if !s.format.audioOnly { args += ["-map","0:V:0"] }
             if hasAudio { args += ["-map","0:a:0"] }
             if !s.lossless {
                 if !s.format.audioOnly { args += ["-vf",videoFilters(s).joined(separator: ",")] }
@@ -91,7 +91,7 @@ public enum CommandBuilder {
         return CommandPlan(arguments: args, duration: max(0, (s.end > 0 ? s.end-s.start : total-s.start)/s.speed), temporaryDirectory: temp)
     }
     static func videoFilters(_ s: ConversionSettings) -> [String] {
-        var f = ["setpts=PTS/"+number(s.speed)]
+        var f = ["scale=w=\'max(2,trunc(iw*sar/2)*2)\':h=ih","setsar=1","setpts=PTS/"+number(s.speed)]
         switch s.rotation { case 90: f += ["transpose=1"]; case 180: f += ["hflip","vflip"]; case 270: f += ["transpose=2"]; default: break }
         if s.flipH { f += ["hflip"] }; if s.flipV { f += ["vflip"] }
         if s.width > 0 { f += ["scale=\(s.width):-2"] }

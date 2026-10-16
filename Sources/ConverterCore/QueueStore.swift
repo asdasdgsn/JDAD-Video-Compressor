@@ -77,7 +77,13 @@ import Combine
     public func retry(id: UUID) {
         guard let i = items.firstIndex(where: { $0.id == id }), ![QueueStatus.running,.waiting].contains(items[i].status) else { return }
         let old = items[i]
-        let out = OutputAllocator.unique(directory: old.output.deletingLastPathComponent(), name: old.output.deletingPathExtension().lastPathComponent, extension: old.settings.format.rawValue)
+        let directory = old.output.deletingLastPathComponent()
+        let base = old.output.deletingPathExtension().lastPathComponent
+        var out = OutputAllocator.unique(directory: directory, name: base, extension: old.settings.format.rawValue)
+        var index = 2
+        while items.contains(where: { $0.output == out && ($0.status == .waiting || $0.status == .running) }) {
+            out = OutputAllocator.unique(directory: directory, name: base+"-\(index)", extension: old.settings.format.rawValue); index += 1
+        }
         items.append(QueueItem(inputs: old.inputs, settings: old.settings, output: out)); persist(); start()
     }
     public func clearFinished() { items.removeAll { $0.status != .running && $0.status != .waiting }; persist() }

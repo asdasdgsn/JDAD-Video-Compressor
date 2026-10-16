@@ -37,6 +37,7 @@
 ./scripts/build-engine.sh
 swift test
 ./scripts/package.sh ./dist
+./scripts/make-dmg.sh ./dist
 ```
 
 build-engine.sh 从 FFmpeg 和 libvpx 官方发布源、LAME 项目的 SourceForge 发布地址获取源码，自行构建禁用 GPL/nonfree 的媒体工具，记录下载包 SHA-256。首次构建需数分钟；这些校验值是下载后记录，不代替上游签名验证。
@@ -50,3 +51,11 @@ FRAMESHIFT_ENGINE_DIR="$PWD/.engine/install/bin" swift run -c release MediaCheck
 ## 许可与源码
 
 Swift 应用源代码按本目录 LICENSE 的 MIT 条款提供。媒体引擎及依赖保留各自许可。安装包内 Resources/LICENSES 及交付的 MediaEngine-Sources 源码归档提供相应说明。替换 FFmpeg 后需自行确认编码能力与兼容性，可重新进行本地签名。
+
+安装包验证：
+
+```sh
+./scripts/verify-package.sh ./dist
+```
+
+生成的 DMG 附带媒体引擎源码归档。分发安装包时请保留这些源码与许可资料。
