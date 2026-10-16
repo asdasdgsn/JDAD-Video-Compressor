@@ -1,0 +1,11 @@
+FrameShift is an independent application. It does not use Thunder Video Converter code, art, or bundled executable files.
+
+FFmpeg 8.0.3: https://ffmpeg.org/ — LGPL 2.1 or later for this build. GPL and nonfree components are disabled. Network protocols are disabled. This application invokes FFmpeg as a separate executable, and does not link FFmpeg libraries into the Swift application.
+libvpx 1.15.2: https://github.com/webmproject/libvpx — BSD license and PATENTS grant, see accompanying files.
+LAME 3.100: https://lame.sourceforge.io/ — LGPL 2 or later, see accompanying file.
+
+The accompanying MediaEngine-Sources archive contains the exact source archives, checksum records, build configuration and build script for these executables. Rebuild and replacement of these media tools are permitted. The application does not perform integrity enforcement against replacing its media tools; macOS code-signing validation may require re-signing the modified application with your own identity or an ad-hoc signature.
+
+VideoToolbox, AVKit and AppKit are macOS system frameworks. H.264 and HEVC use the host macOS implementation. Availability is determined by the host system.
+
+The build has no libx264, libx265 or nonfree codec libraries. Available encoders are read from the packaged executable, and unavailable options are not presented as working features.
