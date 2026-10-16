@@ -27,6 +27,7 @@ struct QueueView: View {
                                     HStack { Text(item.title).font(.system(size:12,weight:.medium)).lineLimit(1);Spacer();Text(status(item.status)).font(.caption2).foregroundStyle(color(item.status)) }
                                     if item.status == .running { ProgressView(value:item.progress).tint(Color.accentColor); HStack { Text("\(Int(item.progress*100))%"); if let start=item.started { Text(start,style:.relative) } }.font(.caption2).foregroundStyle(.secondary) }
                                     else { Text(item.output.lastPathComponent).font(.caption2).foregroundStyle(.secondary).lineLimit(1) }
+                                    Text(sizeSummary(item)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                                     if !item.error.isEmpty { Button { log=item.error } label:{ Text(item.error.components(separatedBy:"\n").last ?? item.error).font(.caption2).lineLimit(1).foregroundStyle(.orange) }.buttonStyle(.plain) }
                                 }
                                 if item.status == .completed {
@@ -47,6 +48,18 @@ struct QueueView: View {
         .sheet(isPresented:Binding(get:{log != nil},set:{if !$0 {log=nil}})) {
             VStack(alignment:.leading,spacing:14) { Text(model.t("任务诊断","Task diagnostic")).font(.headline);ScrollView { Text(log ?? "").font(.system(size:11,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading) };Button(model.t("关闭","Close")){log=nil}.frame(maxWidth:.infinity,alignment:.trailing) }.padding(24).frame(width:650,height:400)
         }
+    }
+    func sizeSummary(_ item: QueueItem) -> String {
+        let original = item.inputBytes ?? FileSize.total(item.inputs)
+        var text = model.t("原始：", "Original: ") + FileSize.text(original)
+        if item.status == .completed {
+            let output = item.outputBytes ?? FileSize.bytes(at: item.output)
+            text += model.t(" → 处理后：", " → Output: ") + FileSize.text(output)
+            if let reduction = FileSize.reduction(input: original, output: output) {
+                text += " · " + (reduction >= 0 ? model.t("减少 ", "Reduced ") : model.t("增加 ", "Increased ")) + String(format: "%.1f%%", abs(reduction))
+            }
+        }
+        return text
     }
     func icon(_ s:QueueStatus)->String {switch s {case .waiting:return "clock";case .running:return "arrow.triangle.2.circlepath";case .completed:return "checkmark.circle.fill";case .failed:return "exclamationmark.circle.fill";case .cancelled:return "stop.circle";case .interrupted:return "pause.circle"}}
     func color(_ s:QueueStatus)->Color {switch s {case .completed:return .green;case .failed:return .orange;case .running:return .accentColor;default:return .secondary}}

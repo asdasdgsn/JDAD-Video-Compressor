@@ -3,6 +3,7 @@ import Darwin
 public struct MediaInfo: Codable, Identifiable, Hashable, Sendable {
     public var id: String { url.path }
     public var url: URL
+    public var fileSize: Int64?
     public var duration: Double
     public var width: Int
     public var height: Int
@@ -19,6 +20,7 @@ public struct MediaInfo: Codable, Identifiable, Hashable, Sendable {
     public var displayWidth: Int { abs(rotation) % 180 == 90 ? height : squareWidth }
     public var displayHeight: Int { abs(rotation) % 180 == 90 ? squareWidth : height }
     public init(url: URL, duration: Double, width: Int = 0, height: Int = 0, videoCodec: String? = nil, audioCodec: String? = nil, fps: Double = 0, rotation: Int = 0, sampleRate: Int = 0, channels: Int = 0, sampleAspectRatio: Double = 1) {
+        self.fileSize = FileSize.bytes(at: url)
         self.url = url; self.duration = duration; self.width = width; self.height = height; self.videoCodec = videoCodec; self.audioCodec = audioCodec; self.fps = fps; self.rotation = rotation; self.sampleRate = sampleRate; self.channels = channels; self.sampleAspectRatio = sampleAspectRatio
     }
     public func compatible(with other: MediaInfo) -> Bool {
@@ -132,5 +134,32 @@ public struct EngineCapabilities: Sendable {
             let cols: [Substring] = line.split(whereSeparator: { $0.isWhitespace }); guard cols.count > 1, cols[0].count == 6 else { return nil }; return String(cols[1])
         }
         return EngineCapabilities(encoders: Set(names))
+    }
+}
+
+public enum FileSize {
+    public static func bytes(at url: URL) -> Int64? {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let size = attributes[.size] as? NSNumber else { return nil }
+        return size.int64Value
+    }
+    public static func text(_ bytes: Int64?) -> String {
+        guard let bytes else { return "—" }
+        return ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+    }
+    public static func total(_ inputs: [MediaInfo]) -> Int64? {
+        guard !inputs.isEmpty else { return nil }
+        var total: Int64 = 0
+        for input in inputs {
+            guard let size = input.fileSize ?? bytes(at: input.url) else { return nil }
+            let result = total.addingReportingOverflow(size)
+            guard !result.overflow else { return nil }
+            total = result.partialValue
+        }
+        return total
+    }
+    public static func reduction(input: Int64?, output: Int64?) -> Double? {
+        guard let input, let output, input > 0 else { return nil }
+        return (1 - Double(output) / Double(input)) * 100
     }
 }

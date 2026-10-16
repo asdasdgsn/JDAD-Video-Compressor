@@ -37,9 +37,11 @@ public struct QueueItem: Identifiable, Codable, Sendable {
     public var error: String = ""
     public var created = Date()
     public var started: Date?
+    public var inputBytes: Int64?
+    public var outputBytes: Int64?
     public var finished: Date?
     public var title: String { inputs.count > 1 ? "\(inputs.count) clips → \(output.lastPathComponent)" : inputs.first?.url.lastPathComponent ?? output.lastPathComponent }
-    public init(inputs: [MediaInfo], settings: ConversionSettings, output: URL) { self.inputs = inputs; self.settings = settings; self.output = output }
+    public init(inputs: [MediaInfo], settings: ConversionSettings, output: URL) { self.inputBytes = FileSize.total(inputs); self.inputs = inputs; self.settings = settings; self.output = output }
     public func recovered() -> QueueItem {
         var copy = self
         if status == .running || status == .waiting { copy.status = .interrupted; copy.error = "上次会话已结束，可重试 / Previous session ended; retry available" }

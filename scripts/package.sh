@@ -6,7 +6,7 @@ mkdir -p "$OUT"
 OUT="$(cd "$OUT" && pwd)"
 swift build -c release
 BIN="$(swift build -c release --show-bin-path)"
-APP="$OUT/FrameShift.app"
+APP="$OUT/JDAD视频压缩工具.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/Engine" "$APP/Contents/Resources/LICENSES"
 cp "$BIN/FrameShift" "$APP/Contents/MacOS/FrameShift"
 cp Resources/Info.plist "$APP/Contents/Info.plist"

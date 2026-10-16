@@ -40,7 +40,7 @@ struct MainView: View {
     var header: some View {
         HStack(spacing: 14) {
             ZStack { RoundedRectangle(cornerRadius: 12).fill(Color.accentColor.opacity(0.13)); Image(systemName: "play.rectangle.on.rectangle.fill").font(.system(size: 24)).foregroundStyle(Color.accentColor) }.frame(width: 48,height: 48)
-            VStack(alignment: .leading, spacing: 3) { Text("FrameShift").font(.system(size: 21, weight: .semibold, design: .rounded)); Text(model.t("映转 · 本地视频工作台","Your local media workbench")).foregroundStyle(.secondary).font(.caption) }
+            VStack(alignment: .leading, spacing: 3) { Text("JDAD视频压缩工具").font(.system(size: 21, weight: .semibold, design: .rounded)); Text(model.t("本地压缩 · 高效转换","Your local media workbench")).foregroundStyle(.secondary).font(.caption) }
             Spacer()
             HStack(spacing: 6) { Circle().fill(model.engineReady ? Color.green : Color.orange).frame(width: 6,height: 6); Text(model.t(model.engineReady ? "本地引擎就绪" : "正在检查引擎",model.engineReady ? "Engine ready" : "Checking engine")).font(.caption).foregroundStyle(.secondary) }
             Button { model.chooseFiles() } label: { Label(model.t("添加文件","Add files"),systemImage: "plus") }.controlSize(.large).disabled(model.importing)
@@ -65,6 +65,7 @@ struct MainView: View {
                             VStack(alignment: .leading,spacing: 4) {
                                 Text(file.url.lastPathComponent).font(.system(size:12,weight:.medium)).lineLimit(2)
                                 Text(file.hasVideo ? "\(file.displayWidth) × \(file.displayHeight) · \(durationText(file.duration))" : durationText(file.duration)).font(.caption2).foregroundStyle(.secondary)
+                                Text(model.t("原始大小：", "Original size: ") + FileSize.text(file.fileSize)).font(.caption).foregroundStyle(.secondary)
                                 Text([file.videoCodec,file.audioCodec].compactMap{$0}.joined(separator:" / ").uppercased()).font(.system(size:9,design:.monospaced)).foregroundStyle(.tertiary)
                             }
                         }.padding(.vertical,6).tag(file.id)

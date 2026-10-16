@@ -6,7 +6,7 @@ import Combine
     @StateObject private var model = AppModel()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene {
-        WindowGroup("FrameShift · 映转") {
+        WindowGroup("JDAD视频压缩工具") {
             MainView(model: model)
                 .frame(minWidth: 1120, minHeight: 750)
                 .onAppear { delegate.model = model }

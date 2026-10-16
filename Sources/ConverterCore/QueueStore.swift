@@ -23,7 +23,7 @@ import Combine
         let groups = settings.merge ? [inputs] : inputs.map { [$0] }
         var pending: [QueueItem] = []
         for group in groups {
-            let base = (group.count > 1 ? "Merged" : group[0].url.deletingPathExtension().lastPathComponent)+"-FrameShift"
+            let base = (group.count > 1 ? "Merged" : group[0].url.deletingPathExtension().lastPathComponent)+"-JDAD"
             var out = OutputAllocator.unique(directory: directory, name: base, extension: settings.format.rawValue)
             var suffix = 2
             while (items+pending).contains(where: { $0.output == out && ($0.status == .waiting || $0.status == .running) }) {
@@ -55,7 +55,7 @@ import Combine
                     if self.items.first(where: { $0.id == id })?.status == .cancelled { throw CancellationError() }
                     // moveItem refuses to replace an existing destination.
                     try FileManager.default.moveItem(at: tempOutput, to: item.output)
-                    self.update(id: id) { $0.status = .completed; $0.progress = 1; $0.finished = Date() }
+                    self.update(id: id) { $0.outputBytes = FileSize.bytes(at: item.output); $0.status = .completed; $0.progress = 1; $0.finished = Date() }
                 } catch is CancellationError {
                     self.update(id: id) { $0.status = .cancelled; $0.finished = Date() }
                 } catch {

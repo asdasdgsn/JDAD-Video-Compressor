@@ -1,10 +1,10 @@
-# FrameShift 映转
+# JDAD视频压缩工具
 
 独立的原生 macOS 本地视频工作台，面向 macOS 14+、Apple Silicon。SwiftUI 界面，内置 FFmpeg/ffprobe；无账号、无云端处理。
 
 ## 使用
 
-1. 打开 DMG，将 FrameShift 拖到 Applications。
+1. 打开 DMG，将 JDAD视频压缩工具 拖到 Applications。
 2. 打开应用，添加或拖入视频/音频。
 3. 选择输出目录、格式和处理参数，点击“开始处理”。任务按顺序执行。
 4. 对文件右键可调整合并顺序；输出成功后点击文件夹图标在 Finder 中显示。
@@ -12,6 +12,8 @@
 此开发交付使用 ad-hoc 本地签名，未使用 Developer ID 签名或 Apple 公证。在其他 Mac 上，系统可能提示无法验证开发者。确认文件来源后，可通过“系统设置 → 隐私与安全性”允许打开。不要关闭系统整体安全机制。
 
 ## 功能
+
+- 导入文件显示原始大小；任务完成显示实际输出大小及减少/增加比例，历史记录保存大小。
 
 - MP4、MOV、MKV、WebM、MP3、M4A、WAV。
 - Apple VideoToolbox H.264 / HEVC、CPU MPEG-4、CPU VP9，按真实引擎能力显示。

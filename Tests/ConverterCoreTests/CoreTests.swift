@@ -145,3 +145,35 @@ final class StreamSelectionTests: XCTestCase {
         XCTAssertTrue(p.arguments.contains("0:V:0"))
     }
 }
+
+final class FileSizeTests: XCTestCase {
+    func testActualSizeAndHistoryPersistence() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data(repeating: 1, count: 2048).write(to: url)
+        let media = MediaInfo(url: url, duration: 1)
+        XCTAssertEqual(media.fileSize, 2048)
+        var item = QueueItem(inputs: [media, media], settings: .init(), output: url)
+        item.outputBytes = 1024
+        let data = try JSONEncoder().encode(item)
+        try FileManager.default.removeItem(at: url)
+        let decoded = try JSONDecoder().decode(QueueItem.self, from: data)
+        XCTAssertEqual(decoded.inputBytes, 4096)
+        XCTAssertEqual(decoded.outputBytes, 1024)
+        XCTAssertEqual(FileSize.reduction(input: decoded.inputBytes, output: decoded.outputBytes), 75)
+        var old = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+        old.removeValue(forKey: "inputBytes"); old.removeValue(forKey: "outputBytes")
+        var inputs = old["inputs"] as! [[String: Any]]
+        for i in inputs.indices { inputs[i].removeValue(forKey: "fileSize") }
+        old["inputs"] = inputs
+        let legacy = try JSONDecoder().decode(QueueItem.self, from: JSONSerialization.data(withJSONObject: old))
+        XCTAssertNil(legacy.inputBytes)
+        XCTAssertNil(FileSize.total(legacy.inputs))
+    }
+    func testLargerAndUnknownSizes() {
+        XCTAssertEqual(FileSize.reduction(input: 100, output: 150), -50)
+        XCTAssertNil(FileSize.reduction(input: 0, output: 100))
+        XCTAssertNil(FileSize.reduction(input: nil, output: 100))
+        XCTAssertEqual(FileSize.text(nil), "—")
+    }
+}

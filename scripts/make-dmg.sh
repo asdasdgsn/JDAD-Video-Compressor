@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 OUT="${1:-$PWD/dist}"
 mkdir -p "$OUT"
 OUT="$(cd "$OUT" && pwd)"
-[ -d "$OUT/FrameShift.app" ] || { echo "Run package.sh first" >&2; exit 1; }
+[ -d "$OUT/JDAD视频压缩工具.app" ] || { echo "Run package.sh first" >&2; exit 1; }
 SOURCES="$PWD/.build/MediaEngine-Sources"
 mkdir -p "$SOURCES"
 cp .engine/sources/*.tar.* .engine/sources/SHA256SUMS "$SOURCES/"
@@ -22,12 +22,12 @@ Use an Apple Silicon Mac with Xcode Command Line Tools. Builds use MACOSX_DEPLOY
 FFmpeg and LAME static libraries are linked into standalone command-line executables, not into the Swift application. You may rebuild or replace these executables and re-sign the modified application locally.
 TEXT
 tar -czf "$OUT/MediaEngine-Sources.tar.gz" -C .build MediaEngine-Sources
-STAGE="$PWD/.build/DMG-stage"
+STAGE="$PWD/.build/JDAD-DMG-stage"
 mkdir -p "$STAGE"
 # This stage contains generated artifacts only.
-if [ -d "$STAGE/FrameShift.app" ]; then rm -rf "$STAGE/FrameShift.app"; fi
-ditto "$OUT/FrameShift.app" "$STAGE/FrameShift.app"
+if [ -d "$STAGE/JDAD视频压缩工具.app" ]; then rm -rf "$STAGE/JDAD视频压缩工具.app"; fi
+ditto "$OUT/JDAD视频压缩工具.app" "$STAGE/JDAD视频压缩工具.app"
 [ -L "$STAGE/Applications" ] || ln -s /Applications "$STAGE/Applications"
 cp "$OUT/MediaEngine-Sources.tar.gz" "$STAGE/MediaEngine-Sources.tar.gz"
 cp README.md "$STAGE/使用说明.md"
-hdiutil create -ov -volname FrameShift -srcfolder "$STAGE" -format UDZO "$OUT/FrameShift-arm64.dmg"
+hdiutil create -ov -volname "JDAD视频压缩工具" -srcfolder "$STAGE" -format UDZO "$OUT/JDAD视频压缩工具-arm64.dmg"
