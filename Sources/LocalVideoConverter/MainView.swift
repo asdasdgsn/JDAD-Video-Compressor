@@ -26,6 +26,11 @@ struct MainView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .toolbar {
             ToolbarItemGroup {
+                Button {
+                    if let url = URL(string: "https://jdad.online/") { NSWorkspace.shared.open(url) }
+                } label: {
+                    Label(model.t("更多工具", "More tools"), systemImage: "arrow.up.right.square").labelStyle(.titleAndIcon)
+                }.help(model.t("打开 JDAD 工具站", "Open JDAD tools"))
                 Picker("Language", selection: $model.language) { Text("中文").tag("zh"); Text("EN").tag("en") }.frame(width: 90)
                 Button { savingPreset = true } label: { Label(model.t("保存预设","Save preset"), systemImage: "slider.horizontal.3") }
             }
@@ -39,7 +44,9 @@ struct MainView: View {
     }
     var header: some View {
         HStack(spacing: 14) {
-            ZStack { RoundedRectangle(cornerRadius: 12).fill(Color.accentColor.opacity(0.13)); Image(systemName: "play.rectangle.on.rectangle.fill").font(.system(size: 24)).foregroundStyle(Color.accentColor) }.frame(width: 48,height: 48)
+            Image(nsImage: NSImage(named: NSImage.applicationIconName) ?? NSImage())
+                .resizable().interpolation(.high).scaledToFit().frame(width: 48, height: 48)
+                .accessibilityLabel("JDAD视频压缩工具")
             VStack(alignment: .leading, spacing: 3) { Text("JDAD视频压缩工具").font(.system(size: 21, weight: .semibold, design: .rounded)); Text(model.t("本地压缩 · 高效转换","Your local media workbench")).foregroundStyle(.secondary).font(.caption) }
             Spacer()
             HStack(spacing: 6) { Circle().fill(model.engineReady ? Color.green : Color.orange).frame(width: 6,height: 6); Text(model.t(model.engineReady ? "本地引擎就绪" : "正在检查引擎",model.engineReady ? "Engine ready" : "Checking engine")).font(.caption).foregroundStyle(.secondary) }
