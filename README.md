@@ -2,6 +2,12 @@
 
 独立的原生 macOS 本地视频工作台，面向 macOS 14+、Apple Silicon。SwiftUI 界面，内置 FFmpeg/ffprobe；无账号、无云端处理。
 
+## 下载与源码
+
+- [官网介绍](https://phiba.jdad.online/index.html#jdad-video-compressor)
+- [下载 Mac 版 1.0.3](https://phiba.jdad.online/downloads/JDAD-Video-Compressor-1.0.3-arm64.dmg)
+- [GitHub 开源仓库](https://github.com/asdasdgsn/JDAD-Video-Compressor)
+
 ## 使用
 
 1. 打开 DMG，将 JDAD视频压缩工具 拖到 Applications。
@@ -61,3 +67,10 @@ Swift 应用源代码按本目录 LICENSE 的 MIT 条款提供。媒体引擎及
 ```
 
 生成的 DMG 附带媒体引擎源码归档。分发安装包时请保留这些源码与许可资料。
+
+
+## 贡献
+
+欢迎通过 GitHub Issues 反馈问题，或提交 Pull Request。请附上 macOS 版本、芯片型号、复现步骤及去除私人信息后的错误日志。修改后运行 `swift test`；涉及媒体处理逻辑时同时运行上述 MediaCheck 检查。
+
+MIT 许可适用于本项目原创代码，不覆盖第三方依赖、品牌名称和图标素材。`Resources/AppIcon.png` 是项目提供的品牌素材，未另行授予 MIT 授权；制作衍生发行版时请替换为自己的图标。第三方媒体引擎许可详见 `LICENSES/`。

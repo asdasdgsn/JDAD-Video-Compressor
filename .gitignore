@@ -2,3 +2,8 @@
 .engine/
 .DS_Store
 .superpowers/
+dist/
+.env
+.env.*
+*.p12
+*.mobileprovision
